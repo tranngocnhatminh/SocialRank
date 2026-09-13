@@ -1,9 +1,10 @@
 # Modules
 import numpy as np
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 # Graph Representation: Adjacency List
 class Graph:
+    # Basic graph structure using an adjacency list to represent nodes and edges
     def __init__(self):
         self.adjlist = {}
 
@@ -14,9 +15,10 @@ class Graph:
     def add_edge(self, u, v):
         self.adjlist[u].append(v)
 
-    def get_nodes(self):
+    def get_nodes(self) -> List:
         return list(self.adjlist.keys())
 
+# PageRank Algorithm Implementation Based on Linear Algebra
 class PageRank:
     def __init__(self, graph: Graph, damping_factor: float = 0.85, tol: float = 1e-6):
         # Initialize basic parameters for PageRank computation
