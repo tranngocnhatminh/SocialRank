@@ -8,6 +8,221 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const form = document.querySelector(".username-form");
+            const input = document.querySelector("#usernames");
+            const button = form.querySelector("button");
+            const graphContainer = document.querySelector(".graph-placeholder");
+
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                if (button.disabled) {
+                    return;
+                }
+
+                const usernames = input.value
+                    .split(/[,\s]+/)
+                    .map(username => username.trim())
+                    .filter(Boolean);
+
+                if (!usernames.length) {
+                    alert("Enter at least one username.");
+                    return;
+                }
+
+                setLoading(true);
+
+                try {
+                    const response = await fetch("/api/analyze", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ usernames })
+                    });
+
+                    const result = await response.json();
+
+                    if (!response.ok) {
+                        alert(result.error);
+                        return;
+                    }
+
+                    console.log("Graph edges:", result.edges);
+                    console.log("Rankings:", result.rankings);
+                    displayRankings(result.rankings);
+                    displayGraph(result.rankings, result.edges);
+                } catch (error) {
+                    alert("The analysis request could not be completed.");
+                    console.error(error);
+                } finally {
+                    setLoading(false);
+                }
+            });
+
+            function setLoading(isLoading) {
+                button.disabled = isLoading;
+                button.classList.toggle("is-loading", isLoading);
+                button.innerHTML = isLoading
+                    ? '<span class="button-spinner" aria-hidden="true"></span>Analyzing...'
+                    : 'Analyze circle <span aria-hidden="true">&#8594;</span>';
+
+                if (isLoading) {
+                    graphContainer.setAttribute("aria-busy", "true");
+                    graphContainer.innerHTML = `
+                        <div class="graph-loading" role="status">
+                            <span class="loading-spinner" aria-hidden="true"></span>
+                            <strong>Analyzing your network</strong>
+                            <span>Checking connections and calculating PageRank...</span>
+                        </div>
+                    `;
+                } else {
+                    graphContainer.removeAttribute("aria-busy");
+                    if (graphContainer.querySelector(".graph-loading")) {
+                        graphContainer.innerHTML = `
+                            <div class="graph-empty-state">
+                                <strong>Your graph will appear here</strong>
+                                <span>Enter usernames above to map the connections.</span>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            function displayRankings(rankings) {
+                const resultsPanel = document.querySelector(".ranking-empty-state");
+
+                resultsPanel.innerHTML = rankings.map((ranking, index) => `
+                    <div class="ranking-row">
+                        <span class="ranking-position">${index + 1}</span>
+                        <span class="ranking-username">@${escapeHtml(ranking.username)}</span>
+                        <span class="ranking-score">${ranking.score.toFixed(6)}</span>
+                    </div>
+                `).join("");
+
+                resultsPanel.classList.add("has-results");
+            }
+
+            function escapeHtml(value) {
+                return String(value).replace(/[&<>'"]/g, character => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    "'": "&#39;",
+                    '"': "&quot;"
+                }[character]));
+            }
+
+            function displayGraph(rankings, edges) {
+                const graphContainer = document.querySelector(".graph-placeholder");
+                const width = graphContainer.clientWidth;
+                const height = graphContainer.clientHeight;
+                const nodes = rankings.map(ranking => ({
+                    id: ranking.username,
+                    score: ranking.score,
+                    radius: 22 + ranking.score * 120
+                }));
+                const nodeById = new Map(nodes.map(node => [node.id, node]));
+                const links = edges
+                    .map(edge => ({
+                        source: nodeById.get(edge.source),
+                        target: nodeById.get(edge.target)
+                    }))
+                    .filter(link => link.source && link.target);
+
+                graphContainer.innerHTML = "";
+
+                const svg = d3.select(graphContainer)
+                    .append("svg")
+                    .attr("class", "network-graph")
+                    .attr("viewBox", `0 0 ${width} ${height}`)
+                    .attr("role", "img")
+                    .attr("aria-label", "Directed graph of the analyzed X network");
+
+                svg.append("defs")
+                    .append("marker")
+                    .attr("id", "arrowhead")
+                    .attr("viewBox", "0 -6 12 12")
+                    .attr("refX", 12)
+                    .attr("refY", 0)
+                    .attr("markerWidth", 8)
+                    .attr("markerHeight", 8)
+                    .attr("orient", "auto")
+                    .append("path")
+                    .attr("d", "M0,-6L12,0L0,6Z")
+                    .attr("class", "arrowhead");
+
+                const link = svg.append("g")
+                    .attr("class", "network-links")
+                    .selectAll("line")
+                    .data(links)
+                    .join("line")
+                    .attr("class", "network-link")
+                    .attr("marker-end", "url(#arrowhead)");
+
+                const node = svg.append("g")
+                    .attr("class", "network-nodes")
+                    .selectAll("g")
+                    .data(nodes)
+                    .join("g")
+                    .attr("class", "network-node");
+
+                node.append("circle")
+                    .attr("r", node => node.radius)
+                    .attr("class", "network-node-circle");
+
+                node.append("text")
+                    .attr("class", "network-node-label")
+                    .attr("dy", "0.35em")
+                    .text(node => node.id);
+
+                const simulation = d3.forceSimulation(nodes)
+                    .force("link", d3.forceLink(links).id(node => node.id).distance(95))
+                    .force("charge", d3.forceManyBody().strength(-180))
+                    .force("center", d3.forceCenter(width / 2, height / 2))
+                    .force("collide", d3.forceCollide().radius(node => node.radius + 12));
+
+                simulation.on("tick", () => {
+                    link
+                        .attr("x1", link => edgePoint(link.source, link.target, link.source.radius).x)
+                        .attr("y1", link => edgePoint(link.source, link.target, link.source.radius).y)
+                        .attr("x2", link => edgePoint(link.target, link.source, link.target.radius).x)
+                        .attr("y2", link => edgePoint(link.target, link.source, link.target.radius).y);
+
+                    node.attr("transform", node => `translate(${node.x},${node.y})`);
+                });
+
+                function edgePoint(node, otherNode, padding) {
+                    const dx = otherNode.x - node.x;
+                    const dy = otherNode.y - node.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+                    return {
+                        x: node.x + (dx / distance) * padding,
+                        y: node.y + (dy / distance) * padding
+                    };
+                }
+
+                node.call(d3.drag()
+                    .on("start", (event, draggedNode) => {
+                        if (!event.active) simulation.alphaTarget(0.3).restart();
+                        draggedNode.fx = draggedNode.x;
+                        draggedNode.fy = draggedNode.y;
+                    })
+                    .on("drag", (event, draggedNode) => {
+                        draggedNode.fx = event.x;
+                        draggedNode.fy = event.y;
+                    })
+                    .on("end", (event, draggedNode) => {
+                        if (!event.active) simulation.alphaTarget(0);
+                        draggedNode.fx = null;
+                        draggedNode.fy = null;
+                    }));
+            }
+        });
+    </script>
 </head>
 <body>
     <main class="page-shell">
@@ -29,7 +244,7 @@
                     <div class="input-wrap">
                         <input type="text" id="usernames" name="usernames" placeholder="microsoft, bbcworld, gamespot" autocomplete="off">
                     </div>
-                    <button type="button">Analyze circle <span aria-hidden="true">&#8594;</span></button>
+                    <button type="submit">Analyze circle <span aria-hidden="true">&#8594;</span></button>
                 </div>
                 <p class="input-note">Separate usernames with commas. You can add up to 25 people and don't need to include the @ symbol.</p>
             </form>
@@ -56,7 +271,7 @@
                         <h2>Results</h2>
                     </div>
                 </div>
-                <div class="ranking-empty-state">
+                <div class="ranking-empty-state" aria-live="polite">
                     <strong>Rankings will appear here</strong>
                     <span>Each username will be mapped to a score.</span>
                 </div>

@@ -159,6 +159,15 @@ button:hover {
     background: var(--green-dark);
 }
 
+button:disabled {
+    cursor: wait;
+    opacity: 0.8;
+}
+
+button.is-loading {
+    justify-content: center;
+}
+
 button span {
     color: #b9e3cd;
     font-size: 18px;
@@ -204,8 +213,58 @@ button span {
     background: #f7faf7;
 }
 
+.network-graph {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.network-link {
+    stroke: #9bbbad;
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+.arrowhead {
+    fill: #4d806c;
+    stroke: #4d806c;
+}
+
+.network-node {
+    cursor: grab;
+}
+
+.network-node:active {
+    cursor: grabbing;
+}
+
+.network-node-circle {
+    fill: var(--green);
+    stroke: #ffffff;
+    stroke-width: 3;
+    transition: fill 160ms ease;
+}
+
+.network-node:hover .network-node-circle {
+    fill: var(--coral);
+}
+
+.network-node-label {
+    fill: #ffffff;
+    font-family: "Manrope", sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0;
+    pointer-events: none;
+    paint-order: stroke;
+    stroke: rgba(13, 87, 72, 0.35);
+    stroke-width: 2px;
+    text-anchor: middle;
+}
+
 .graph-empty-state,
-.ranking-empty-state {
+.ranking-empty-state,
+.graph-loading {
     position: relative;
     z-index: 3;
     display: flex;
@@ -219,15 +278,87 @@ button span {
 }
 
 .graph-empty-state strong,
-.ranking-empty-state strong {
+.ranking-empty-state strong,
+.graph-loading strong {
     color: var(--ink);
     font-size: 13px;
+}
+
+.graph-loading {
+    gap: 9px;
+}
+
+.loading-spinner,
+.button-spinner {
+    display: inline-block;
+    border: 3px solid rgba(20, 115, 93, 0.18);
+    border-top-color: var(--green);
+    border-radius: 50%;
+    animation: spin 800ms linear infinite;
+}
+
+.loading-spinner {
+    width: 34px;
+    height: 34px;
+    margin-bottom: 5px;
+}
+
+.button-spinner {
+    width: 14px;
+    height: 14px;
+    border-width: 2px;
+    border-color: rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .ranking-empty-state {
     min-height: 276px;
     justify-content: center;
     padding: 35px 45px 15px;
+}
+
+.ranking-empty-state.has-results {
+    display: block;
+    min-height: 276px;
+    padding: 20px 24px;
+    text-align: left;
+}
+
+.ranking-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+}
+
+.ranking-row:last-child {
+    border-bottom: 0;
+}
+
+.ranking-position {
+    color: var(--coral);
+    font-family: "DM Mono", monospace;
+    font-size: 11px;
+}
+
+.ranking-username {
+    color: var(--ink);
+    font-weight: 700;
+}
+
+.ranking-score {
+    color: var(--green);
+    font-family: "DM Mono", monospace;
+    font-size: 11px;
 }
 
 .site-footer {
