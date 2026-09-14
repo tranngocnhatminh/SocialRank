@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialRank</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="page-shell">
+        <section class="hero" aria-labelledby="page-title">
+            <h1 id="page-title">SocialRank</h1>
+            <p class="hero-description">A mathematical approach to determine who is the most important person in your social group</p>
+        </section>
+
+        <section class="input-panel" aria-labelledby="input-title">
+            <div class="section-label">
+                <div>
+                    <h2 id="input-title">Build your circle</h2>
+                    <p>Add the X usernames you want to compare.</p>
+                </div>
+            </div>
+            <form class="username-form">
+                <label for="usernames">X usernames</label>
+                <div class="input-row">
+                    <div class="input-wrap">
+                        <input type="text" id="usernames" name="usernames" placeholder="microsoft, bbcworld, gamespot" autocomplete="off">
+                    </div>
+                    <button type="button">Analyze circle <span aria-hidden="true">&#8594;</span></button>
+                </div>
+                <p class="input-note">Separate usernames with commas. You can add up to 25 people and don't need to include the @ symbol.</p>
+            </form>
+        </section>
+
+        <section class="analysis-grid" aria-label="Social network analysis">
+            <article class="analysis-card graph-card">
+                <div class="card-header">
+                    <div>
+                        <h2>Connections</h2>
+                    </div>
+                </div>
+                <div class="graph-placeholder" aria-label="Graph visualization placeholder">
+                    <div class="graph-empty-state">
+                        <strong>Your graph will appear here</strong>
+                        <span>Enter usernames above to map the connections.</span>
+                    </div>
+                </div>
+            </article>
+
+            <article class="analysis-card ranking-card">
+                <div class="card-header">
+                    <div>
+                        <h2>Results</h2>
+                    </div>
+                </div>
+                <div class="ranking-empty-state">
+                    <strong>Rankings will appear here</strong>
+                    <span>Each username will be mapped to a score.</span>
+                </div>
+            </article>
+        </section>
+
+        <footer class="site-footer"><span>Powered by a modified PageRank algorithm</span></footer>
+    </main>
+</body>
+</html>

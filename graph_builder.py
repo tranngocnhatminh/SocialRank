@@ -1,13 +1,7 @@
 # Modules
-import os
 import requests
-from dotenv import load_dotenv
 from typing import List
 from graph_and_pagerank import Graph
-
-# Load API key from environment
-load_dotenv()
-api_key = os.getenv("XAPI_KEY")
 
 # GraphBuilder to construct the graph from API data
 class GraphBuilder:
