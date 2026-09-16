@@ -33,7 +33,7 @@ If you want to test it out yourself:
 * Wait for the algorithm to work its magic
 * Marvel at whoever is the 'soul' of your social group (apparently for me it's Microsoft!)
 
-![Demo Screenshot](assets\demo.png)
+![Demo Screenshot](assets/demo.png)
 
 ## Additional Notes
 _(You can completely skip this section if you want to)_
